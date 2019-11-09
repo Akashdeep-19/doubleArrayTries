@@ -5,7 +5,6 @@
 #include<time.h>
 
 using namespace std;
-
 class DoubleArrayTrie
 {
     public:
@@ -55,27 +54,28 @@ class DoubleArrayTrie
         ins_str(r, a, pos);
     }
 
-    void b_insert(int r, string a1, string b1)
+    void b_insert(int r, string a1,string ak1, string b1)
     {
         vector<int> a = string_to_vec(a1);
         vector<int> b = string_to_vec(b1);
+        vector<int> ak = string_to_vec(ak1);
         int old_pos;
         old_pos = -base[r];
-        int k;
-        for (k = 0; a[k] == b[k]; k++);
-
-        for (int i = 0; i < k; i++)
+       
+        for (int i = 0; i < a.size(); i++)
         {
+            
             vector<int> temp = {a[i]};
             base[r] = x_check(temp);
             check[base[r] + a[i]] = r;
             r = base[r] + a[i];
         }
-        vector<int> v = {a[k], b[0]};
+        vector<int> v = {ak[0], b[0]};
         base[r] = x_check(v);
+       // b = vector<int>(b.begin(),b.end());
         ins_str(r, b, old_pos);
-        a = vector<int>(a.begin() + k, a.end());
-        ins_str(r, a, pos);
+       // a = vector<int>(ak.begin()+1, ak.end());
+        ins_str(r, ak, pos);
     }
 
     bool retrieval(string x)
@@ -86,6 +86,7 @@ class DoubleArrayTrie
         string s_temp, rem_input_string = "";
         while (base[r] > 0)
         {
+            if(x[h] == '#')return true;
             t = base[r] + code(x[h]);
 
             if (t > size || check[t] != r)
@@ -293,7 +294,7 @@ class DoubleArrayTrie
     //x=a1a2a3...anan+1
 
 
-    void insert(string x/*, int *base, int *check, string tail*/)
+    int insert(string x/*, int *base, int *check, string tail*/)
     {
         int r = 1;
         int h = 0;
@@ -301,6 +302,7 @@ class DoubleArrayTrie
         string s_temp, rem_input_string = "";
         while (base[r] > 0)
         {
+            if(x[h] == '#')return 0;
             t = base[r] + code(x[h]);
 
             if (t > size || check[t] != r)
@@ -309,7 +311,7 @@ class DoubleArrayTrie
                 for(int i=h;i<x.length();i++)
                     rem.push_back(x[i]);
                 a_insert(r,rem); //if the next state is not present
-                return;
+                return 1;
             }
             else
             {
@@ -319,7 +321,7 @@ class DoubleArrayTrie
         }
         if (h == x.length())
         {
-            return ;
+            return 0;
         }
         else
         {
@@ -327,29 +329,43 @@ class DoubleArrayTrie
         }
         for (int i = h; i < x.length(); i++)
         {
-            rem_input_string = rem_input_string + x[i];
+            rem_input_string += x[i];
         }
         if (str_cmp(rem_input_string, s_temp) == -1)
         {
-            return ;
+            return 0;
         }
         else
         {
-            b_insert(r,rem_input_string,s_temp); //if the multinode is not same as the remaining part of the string
+            int k;
+            string prefix,rem_suff,s_temp_suff;
+            for (k = 0; (rem_input_string[k] == s_temp[k]); k++)prefix+=s_temp[k];
+            for(int i = 0;i<rem_input_string.length();i++)rem_suff+= rem_input_string[k+i];
+            for(int i = 0;i<s_temp.length();i++)s_temp_suff+= s_temp[k+i];
+            b_insert(r,prefix,rem_suff,s_temp_suff); //if the multinode is not same as the remaining part of the string
+            return 2;
         }
     }
 };
 int main(){
-    DoubleArrayTrie *dat=new DoubleArrayTrie(200);
+    int size = 30000;
+    DoubleArrayTrie *dat=new DoubleArrayTrie(size);
+    DoubleArrayTrie *dat2=new DoubleArrayTrie(2000);
     ifstream file;
     string line;
-    vector<string> words;
+    long tot_chars = 0;
+    long stored_chars = 0;
+    int n_correct = 0;
+    vector<string> words,missed;
     file.open("google-10000-english.txt");
+
     clock_t start = clock(); 
     if(file.is_open()){
-        while (getline(file, line) && words.size() < 15) {
+        while (getline(file, line) && words.size() < 10000) {
+            int count = 0;
             line += "#";
-            dat->insert(line);
+            int m = dat->insert(line);
+            
             words.push_back(line);
             if(words.size()%100 == 0)
                 cout<<"Words inserted : "<<words.size()<<endl;
@@ -358,22 +374,43 @@ int main(){
     
     start = clock() - start;
     double time_taken = ((double)start/CLOCKS_PER_SEC);
-    int n_correct = 0;
+    
     clock_t end = clock();
+
     for(string s : words){
-        n_correct += dat->retrieval(s);
+        int r = dat->retrieval(s);
+        if(r == 0)dat->insert(s);
     }
+
+    for(string s : words){
+        int r = dat->retrieval(s);
+        if(r == 0)missed.push_back(s);
+        tot_chars += s.length();
+        n_correct += r;
+    }
+    
     end = clock() - end;
     double time_ret = ((double)end/CLOCKS_PER_SEC);
-    int acc = n_correct/words.size()*100;
-    cout<<"accuracy : "<<acc<<endl;
-    cout<<"Time taken to insert : "<<time_taken<<endl;
-    cout<<"Time taken to retrieval : "<<time_ret<<endl;
-    cout<<"base  : ";
-    for(int i = 1;i < 10;i++)cout<<dat->base[i]<<" ";
+    double acc = n_correct/(double)words.size()*100;
+    
+    cout<<"\naccuracy : "<<acc<<endl;
+    cout<<"Time taken to insert : "<<time_taken<<"s"<<endl;
+    cout<<"Time taken to retrieval : "<<time_ret<<"s"<<endl;
+    cout<<"max base  : "<<*max_element(dat->base,dat->base+size)<<endl;
+    cout<<"min base  : "<<*min_element(dat->base,dat->base+size)<<endl;
+    cout<<"max check  : "<<*max_element(dat->check,dat->check+size)<<endl;
+    cout<<"min check  : "<<*min_element(dat->check+1,dat->check+size)<<endl;
+
+    cout<<"base : ";
+    for(int i = 1;i < 30;i++)cout<<dat->base[i]<<" ";
     cout<<endl;
     cout<<"check : ";
-    for(int i = 1;i < 10;i++)cout<<dat->check[i]<<" ";
+    for(int i = 1;i < 45;i++)cout<<dat->check[i]<<" ";
     cout<<endl;
     //cout<<"tail : "<<dat->tail<<endl;
+    cout<<"Total chars : "<<tot_chars<<endl;
+    stored_chars += 2*size + dat->tail.length();
+    cout<<"Stored chars : "<<stored_chars<<endl;
+    cout<<"missed :"<<endl;
+    for(int i = 0;i < 30;i++)cout<<missed[i]<<" "<<endl;
 }
