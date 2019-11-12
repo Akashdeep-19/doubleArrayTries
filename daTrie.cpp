@@ -159,7 +159,7 @@ class DoubleArrayTrie
     {
         vector<int> a;
         int k = 1;
-        for (int i = 1; i < 27; i++)
+        for (int i = 1; i < 28; i++)
         {
 
             if (base[r] + i >= size)
@@ -281,11 +281,13 @@ class DoubleArrayTrie
     //undefined str_tail function
     int str_tail(int p, vector<int> rem_string)
     {
-        //no clue what this does, please check
+        
         for(int i = 0;i < rem_string.size();i++){
             if(tail.length() <= i+p-1)tail += '?';
             tail[i+p-1] = val(rem_string[i]);
         }
+        if(p+rem_string.size() > pos)
+            return p+rem_string.size();
         if (p == pos)
             return (pos + rem_string.size());
         else
@@ -348,9 +350,8 @@ class DoubleArrayTrie
     }
 };
 int main(){
-    int size = 30000;
+    int size = 18000;
     DoubleArrayTrie *dat=new DoubleArrayTrie(size);
-    DoubleArrayTrie *dat2=new DoubleArrayTrie(2000);
     ifstream file;
     string line;
     long tot_chars = 0;
@@ -364,23 +365,22 @@ int main(){
         while (getline(file, line) && words.size() < 10000) {
             int count = 0;
             line += "#";
-            int m = dat->insert(line);
+            if(line == "language#")
+                int m = dat->insert(line);
+            else
+                int m = dat->insert(line);
             
             words.push_back(line);
-            if(words.size()%100 == 0)
-                cout<<"Words inserted : "<<words.size()<<endl;
+    
+            // if(words.size()%100 == 0)
+            //     cout<<"Words inserted : "<<words.size()<<endl;
         }   
     }
-    
     start = clock() - start;
     double time_taken = ((double)start/CLOCKS_PER_SEC);
     
     clock_t end = clock();
 
-    for(string s : words){
-        int r = dat->retrieval(s);
-        if(r == 0)dat->insert(s);
-    }
 
     for(string s : words){
         int r = dat->retrieval(s);
@@ -407,7 +407,9 @@ int main(){
     cout<<"check : ";
     for(int i = 1;i < 45;i++)cout<<dat->check[i]<<" ";
     cout<<endl;
-    //cout<<"tail : "<<dat->tail<<endl;
+    cout<<"tail : ";
+    for(int i = 1;i < 150;i++)cout<<dat->tail[i];
+    cout<<endl;
     cout<<"Total chars : "<<tot_chars<<endl;
     stored_chars += 2*size + dat->tail.length();
     cout<<"Stored chars : "<<stored_chars<<endl;
