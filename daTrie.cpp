@@ -3,6 +3,7 @@
 #include <string> 
 #include<fstream>
 #include<time.h>
+#include<bits/stdc++.h>
 
 using namespace std;
 class DoubleArrayTrie
@@ -18,11 +19,8 @@ class DoubleArrayTrie
         size = size_;
         base = new int[size];
         check = new int[size];
-        for (int i = 0; i < size; i++)
-        {
-            base[i] = 0;
-            check[i] = 0;
-        }
+	memset(base,0,sizeof(base));
+	memset(check , 0 , sizeof(check));
         base[1] = 1;
         pos = 1;
         tail = "";
@@ -150,7 +148,7 @@ class DoubleArrayTrie
         string str;
         for (int i = 0; i < vec.size(); i++)
         {
-            str += val(vec[i]);
+		str.push_back(val(vec[i]));
         }
         return str;
     }
@@ -254,7 +252,7 @@ class DoubleArrayTrie
         string temp = "";
         while (tail[p] != '#')
         {
-            temp = temp + tail[p];
+            temp = temp.push_back(tail[p]);
             p++;
         }
         temp = temp + "#";
